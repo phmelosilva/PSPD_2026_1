@@ -20,16 +20,28 @@ int main() {
         if (comando == 'j') {
             if (linha < l - 1) {
                 linha++;
-
-                if ((strlen(texto[linha]) - 2 )) {}
+                int ultimo_indice = strlen(texto[linha]) - 2;
+                if (coluna_alvo > ultimo_indice) {
+                    coluna = ultimo_indice;
+                } else {
+                    coluna = coluna_alvo;
+                }
             }
         }
 
         if (comando == 'k') {
-            if (linha < l -1) {
-
+            if (linha > 0) {
+                linha--;
+                int ultimo_indice = strlen(texto[linha]) - 2;
+                if (coluna_alvo > ultimo_indice) {
+                    coluna = ultimo_indice;
+                } else {
+                    coluna = coluna_alvo;
+                }
             }
         }
+
+        printf("%d %d %c\n", linha+1, coluna+1, texto[linha][coluna]);
     }
 
 
