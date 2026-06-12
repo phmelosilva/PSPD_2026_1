@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang=""><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Parallel Prime Sum com MPI</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+</style>
+  <style type="text/css">body {
+margin: auto;
+padding-right: 1em;
+padding-left: 1em;
+max-width: 44em; border-left: 1px solid black;
+border-right: 1px solid black;
+color: black;
+font-family: Verdana, sans-serif;
+font-size: 100%;
+line-height: 140%;
+color: #333; }
+pre {
+border: 1px dotted gray;
+background-color: #ececec;
+color: #1111111;
+padding: 0.5em;
+}
+blockquote {
+color: #666666;
+margin: 0;
+padding-left: 3em;
+border-left: 0.5em #EEE solid;
+}
+code {
+font-family: monospace;
+}
+h1 a, h2 a, h3 a, h4 a, h5 a { text-decoration: none;
+color: #7a5ada; }
+h1, h2, h3, h4, h5 { font-family: verdana;
+font-weight: bold;
+border-bottom: 1px dotted black;
+color: #7a5ada; }
+h1 {
+font-size: 130%;
+}
+h2 {
+font-size: 110%;
+}
+h3 {
+font-size: 95%;
+}
+h4 {
+font-size: 90%;
+font-style: italic;
+}
+h5 {
+font-size: 90%;
+font-style: italic;
+}
+h1.title {
+font-size: 200%;
+font-weight: bold;
+padding-top: 0.2em;
+padding-bottom: 0.2em;
+text-align: left;
+border: none;
+}
+dt code {
+font-weight: bold;
+}
+dd p {
+margin-top: 0;
+}
+#footer {
+padding-top: 1em;
+font-size: 70%;
+color: gray;
+text-align: center;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Parallel Prime Sum com MPI</h1>
+</header>
+<a href="https://moj.naquadah.com.br/contests/sundfeld_pspd_2026_01_t1_prova1_sex/MPI_MiniReference.html">CLIQUE AQUI PARA REFERENCIA MPI</a>
+<p>O estudo formal dos números primos começou na Grécia Antiga, por
+volta do século VI a.C. A Escola Pitagórica (c.&nbsp;530 a.C.) trouxe as
+primeiras noções sobre números primos e compostos, atreladas ao
+misticismo e à base da matemática na época. Euclides, fez um dos
+principais avanços na época, formalizando o conceito de número primo e
+traz a primeira prova matemática de que a quantidade de números primos
+não tem fim. Ao longo dos séculos, diversos matemáticos continuaram o
+estudo dos números primos, Pierre de Fermat (século XVII) e Carl
+Friedrich Gauss (século XIX) os estudaram e aprofundaram a teoria dos
+números.</p>
+<p>Apesar de ser um conceito antigo, eles são importantes na era
+moderna. Uma das principais utilidades para números primos é utilizá-los
+na criptografia e segurança moderna. O fato de multiplicar dois números
+primos gigantes é fácil, mas descobrir quais foram esses números a
+partir do resultado é um processo extremamente lento para computadores
+comuns. Isso garante a privacidade de dados na Internet. Além da
+criptografia, a busca por primos maiores impulsiona a melhoria de
+processadores, enquanto o cálculo rápido de fatores primos é usado para
+resolver problemas complexos de redes, tabelas de dispersão (hash) e
+algoritmos de machine learning.</p>
+<p>Neste problema, você deve criar um programa de computador que irá
+receber diversos números inteiros muito grandes. Você deve então decidir
+se eles são primos, ou não, e efetuar a soma dos números apenas dos
+números primos, imprimindo o resultado no final.</p>
+<h2 id="entrada">Entrada</h2>
+<p>A primeira linha é composta por 1 número inteiro:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>≤</mo><mi>N</mi><mo>≤</mo><mn>100</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1 \leq N \leq 100)</annotation></semantics></math>.
+Depois,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+números inteiros,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
+são informados
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>≤</mo><mi>j</mi><mo>≤</mo><msup><mn>2</mn><mn>64</mn></msup><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(2 \leq j \leq 2^64-1)</annotation></semantics></math>.</p>
+<h2 id="saída">Saída</h2>
+<p>Seu programa deve imprimir a soma de todos os números primos do
+vetor.</p>
+<h2 id="restrições">Restrições</h2>
+<ul>
+<li>Seu programa deve ser construído em MPI e deve usar o paralelismo
+para poder executar em tempo hábil.</li>
+<li>Os números primos são grandes e não cabem em um inteiro
+convencional. Use unsigned long long e MPI_UNSIGNED_LONG_LONG.</li>
+<li><strong>APENAS</strong> seu processo de rank 0 deve efetuar
+operações na entrada e saída padrão.</li>
+</ul>
+<h3 id="exemplo-de-entrada-1">Exemplo de Entrada 1</h3>
+<pre><code>10
+2 3 4 5 6 7 8 9 10 11</code></pre>
+<h3 id="exemplo-de-saída-1">Exemplo de Saída 1</h3>
+<pre><code>28</code></pre>
+<h3 id="exemplo-de-entrada-2">Exemplo de Entrada 2</h3>
+<pre><code>4
+2305843009213693921 2305843009213693923 2305843009213693723 2305843009213693693</code></pre>
+<h3 id="exemplo-de-saída-2">Exemplo de Saída 2</h3>
+<pre><code>6917529027641081337</code></pre>
+<div id="footer">
+<p>Author: Daniel Sundfeld <a href="mailto:daniel.sundfeld@unb.br" class="email">daniel.sundfeld@unb.br</a></p>
+</div>
+
+
+</body></html>

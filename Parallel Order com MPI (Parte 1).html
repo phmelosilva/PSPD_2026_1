@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang=""><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Parallel Order com MPI (Parte 1)</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } 
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.at { color: #204a87; } 
+code span.bn { color: #0000cf; } 
+code span.cf { color: #204a87; font-weight: bold; } 
+code span.ch { color: #4e9a06; } 
+code span.cn { color: #8f5902; } 
+code span.co { color: #8f5902; font-style: italic; } 
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.dt { color: #204a87; } 
+code span.dv { color: #0000cf; } 
+code span.er { color: #a40000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #0000cf; } 
+code span.fu { color: #204a87; font-weight: bold; } 
+code span.im { } 
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.kw { color: #204a87; font-weight: bold; } 
+code span.op { color: #ce5c00; font-weight: bold; } 
+code span.ot { color: #8f5902; } 
+code span.pp { color: #8f5902; font-style: italic; } 
+code span.sc { color: #ce5c00; font-weight: bold; } 
+code span.ss { color: #4e9a06; } 
+code span.st { color: #4e9a06; } 
+code span.va { color: #000000; } 
+code span.vs { color: #4e9a06; } 
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">body {
+margin: auto;
+padding-right: 1em;
+padding-left: 1em;
+max-width: 44em; border-left: 1px solid black;
+border-right: 1px solid black;
+color: black;
+font-family: Verdana, sans-serif;
+font-size: 100%;
+line-height: 140%;
+color: #333; }
+pre {
+border: 1px dotted gray;
+background-color: #ececec;
+color: #1111111;
+padding: 0.5em;
+}
+blockquote {
+color: #666666;
+margin: 0;
+padding-left: 3em;
+border-left: 0.5em #EEE solid;
+}
+code {
+font-family: monospace;
+}
+h1 a, h2 a, h3 a, h4 a, h5 a { text-decoration: none;
+color: #7a5ada; }
+h1, h2, h3, h4, h5 { font-family: verdana;
+font-weight: bold;
+border-bottom: 1px dotted black;
+color: #7a5ada; }
+h1 {
+font-size: 130%;
+}
+h2 {
+font-size: 110%;
+}
+h3 {
+font-size: 95%;
+}
+h4 {
+font-size: 90%;
+font-style: italic;
+}
+h5 {
+font-size: 90%;
+font-style: italic;
+}
+h1.title {
+font-size: 200%;
+font-weight: bold;
+padding-top: 0.2em;
+padding-bottom: 0.2em;
+text-align: left;
+border: none;
+}
+dt code {
+font-weight: bold;
+}
+dd p {
+margin-top: 0;
+}
+#footer {
+padding-top: 1em;
+font-size: 70%;
+color: gray;
+text-align: center;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Parallel Order com MPI (Parte 1)</h1>
+</header>
+<a href="https://moj.naquadah.com.br/contests/sundfeld_pspd_2026_01_t1_prova1_sex/MPI_MiniReference.html">CLIQUE AQUI PARA REFERENCIA MPI</a>
+<p>Joãozinho comecou a estudar programação mas ele se adiantou e
+aprendeu programação distribuída e paralela antes de aprender estruturas
+de dados, algortimos de ordenação…</p>
+<p>Mas logo ficou fascinado com o tópico e resolveu paralelizar um
+algoritmo de ordenação entre múltiplos processos. Para isso, ele pegou o
+primeiro algoritmo de ordenação que encontrou e você pode usar nesse
+exercício. Este algoritmo não é rápido e você não deveria colocá-lo em
+produção. Mas, para a solução deste exercício, você não precisa
+melhorá-lo.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> sort<span class="op">(</span><span class="dt">int</span> <span class="op">*</span>vet<span class="op">,</span> <span class="dt">int</span> n<span class="op">)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> i<span class="op">;</span> j <span class="op">&lt;</span> n<span class="op">;</span> j<span class="op">++)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>vet<span class="op">[</span>i<span class="op">]</span> <span class="op">&gt;</span> vet<span class="op">[</span>j<span class="op">])</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int</span> tmp <span class="op">=</span> vet<span class="op">[</span>i<span class="op">];</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                vet<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> vet<span class="op">[</span>j<span class="op">];</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                vet<span class="op">[</span>j<span class="op">]</span> <span class="op">=</span> tmp<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>E como ele projetou a ordenação paralela: cada processo irá trabalhar
+numa parte do vetor apenas. Assim, este algoritmo não ordena
+completamente o vetor e o resultado depende do número de processos.</p>
+<p>Veja como funciona, imagine que exista um vetor decrescente de 8
+células:</p>
+<table>
+<tbody>
+<tr>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+</tr>
+</tbody>
+</table>
+<p>Se tivermos 2 processos, o processo rank 0 irá ordenar apenas a
+primeira metade e o processo rank 1 ordenará apenas a segunda
+metade.</p>
+<p>As 8 células então, serão dividas em 4 células entre os processos
+<strong>Rank 0</strong> e <em>Rank 1</em>:</p>
+<table>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>8</strong></td>
+<td style="text-align: center;"><strong>7</strong></td>
+<td style="text-align: center;"><strong>6</strong></td>
+<td style="text-align: center;"><strong>5</strong></td>
+<td style="text-align: center;"><em>4</em></td>
+<td style="text-align: center;"><em>3</em></td>
+<td style="text-align: center;"><em>2</em></td>
+<td style="text-align: center;"><em>1</em></td>
+</tr>
+</tbody>
+</table>
+<p>Já no caso de 4 processo, cada processo ordenaria 2 células e entre
+os processos de <strong>Rank 0</strong>, <em>Rank 1</em>,
+<strong><em>Rank 2</em></strong>, Rank 3:</p>
+<table>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>8</strong></td>
+<td style="text-align: center;"><strong>7</strong></td>
+<td style="text-align: center;"><em>6</em></td>
+<td style="text-align: center;"><em>5</em></td>
+<td style="text-align: center;"><strong><em>4</em></strong></td>
+<td style="text-align: center;"><strong><em>3</em></strong></td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+</tr>
+</tbody>
+</table>
+<p>Caso a divisão do tamanho do vetor e o número de processos não seja
+inteira, o processo de rank 0 faz a ordenação daquele trecho.</p>
+<p>Para isso, Joãozinho irá usar o algoritmo acima da seguinte forma, a
+chamada:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> vet<span class="op">[</span><span class="dv">100</span><span class="op">];</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>sort<span class="op">(&amp;</span>vet<span class="op">[</span><span class="dv">0</span><span class="op">],</span> <span class="dv">50</span><span class="op">);</span></span></code></pre></div>
+<p>Faz a ordenação das posições 0 a 49. Já a chamada:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sort<span class="op">(&amp;</span>vet<span class="op">[</span><span class="dv">50</span><span class="op">],</span> <span class="dv">50</span><span class="op">);</span></span></code></pre></div>
+<p>Faz a ordenação das posições de 50 a 99.</p>
+<p>Então, Joãozinho criou o primeiro passo do seu algoritmo de
+ordenação. Como você pode ver, esse algoritmo nunca irá ordenar
+COMPLETAMENTE o vetor, mas seu resultado pode ser usado em outras etapas
+rápidas!</p>
+<p>Neste exercício, vocẽ deve implementar em MPI o algoritmo de
+ordenação parcial do Joãozinho que possui seguintes passos:</p>
+<ul>
+<li>O processo 0 lê o tamanho do vetor da entrada padrão.</li>
+<li>O processo rank 0 informa o tamanho do vetor.</li>
+<li>O processo 0 lê o vetor da entrada padrão.</li>
+<li>O processo 0 informa a todos os outros o vetor lido.</li>
+<li>Cada processo usa o sort na parte que lhe é devida.</li>
+<li>Cada processo informa o seu resultado ao processo 0.</li>
+<li>O processo 0 imprime o vetor parcialmente ordenado na tela.</li>
+</ul>
+<h2 id="entrada">Entrada</h2>
+<p>A primeira linha é composta por 1 número inteiro:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>≤</mo><mi>N</mi><mo>≤</mo><mn>1000000</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1 \leq N \leq 1000000)</annotation></semantics></math>.
+Depois,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+números inteiros,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
+são informados
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>≤</mo><mi>j</mi><mo>≤</mo><msup><mn>2</mn><mn>32</mn></msup><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(2 \leq j \leq 2^32-1)</annotation></semantics></math>.</p>
+<h2 id="saída">Saída</h2>
+<p>Seu programa deve imprimir o vetor ordenado de acordo com o número de
+processos MPI criados.</p>
+<h2 id="restrições">Restrições</h2>
+<ul>
+<li>Seu programa deve ser construído em MPI e deve usar o paralelismo.
+Não seguir essas instruções poderá anular sua resposta.</li>
+<li>O algortimo de ordenação do Joãozinho exige o uso de unsigned long
+long. Seu código deve usar MPI_UNSIGNED_LONG_LONG.</li>
+<li>Seu não deve assumir um número fixo de processos: eles podem
+variar.</li>
+<li><strong>APENAS</strong> seu processo de rank 0 deve efetuar
+operações na entrada e saída padrão.</li>
+</ul>
+<h3 id="exemplo-de-entrada-1">Exemplo de Entrada 1</h3>
+<pre><code>8
+8 7 6 5 4 3 2 1</code></pre>
+<h3 id="exemplo-de-saída-1">Exemplo de Saída 1</h3>
+<p>2 processos (-np 2)</p>
+<pre><code>5 6 7 8 1 2 3 4</code></pre>
+<p>4 processos (-np 4):</p>
+<pre><code>7 8 5 6 3 4 1 2</code></pre>
+<h3 id="exemplo-de-entrada-2">Exemplo de Entrada 2</h3>
+<pre><code>10
+10 8 6 4 2 9 7 5 3 1</code></pre>
+<h3 id="exemplo-de-saída-2">Exemplo de Saída 2</h3>
+<p>2 processos (-np 2)</p>
+<pre><code>6 7 8 9 10 1 2 3 4 5 </code></pre>
+<p>4 processos (-np 4)</p>
+<pre><code>9 10 7 8 5 6 3 4 1 2</code></pre>
+<div id="footer">
+<p>Author: Daniel Sundfeld <a href="mailto:daniel.sundfeld@unb.br" class="email">daniel.sundfeld@unb.br</a></p>
+</div>
+
+
+</body></html>
